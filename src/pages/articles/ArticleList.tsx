@@ -10,7 +10,7 @@ import {
 } from "date-fns"; 
 import { useAuth } from "../../context/AuthContext";
 import { id as indonesia } from "date-fns/locale";
-import { Plus, Search, Edit, Trash2, FileText, Filter, X } from "lucide-react";
+import { Plus, Search, Edit, Trash2, FileText, Filter, X, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -309,14 +309,26 @@ const ArticleList = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        article.status === 'Published' 
-                          ? 'bg-green-50 text-green-700 border border-green-200' 
-                          : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${article.status === 'Published' ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
-                        {article.status === 'Published' ? 'Terbit' : 'Draf'}
-                      </span>
+                      {article.status === 'Published' ? (
+                        /* Tampilan jika Terbit: Bisa diklik sebagai link ke web publik */
+                        <a 
+                          href={`https://lspiuinbdg.vercel.app/artikel/${article.slug}`} // Ganti dengan domain asli Anda
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors group"
+                          title="Lihat di Website Publik"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                          Terbit
+                          <ExternalLink className="w-3 h-3 ml-0.5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </a>
+                      ) : (
+                        /* Tampilan jika Draf: Tetap span biasa */
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+                          Draf
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
                       {article.createdAt?.seconds 
