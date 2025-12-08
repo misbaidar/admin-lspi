@@ -1,5 +1,4 @@
 // src/components/layout/Sidebar.tsx
-import React from "react";
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, FileText, Settings, ExternalLink, Users } from "lucide-react";
 import { cn } from "../../lib/utils";

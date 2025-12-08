@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { updateProfile, updatePassword, signOut } from "firebase/auth";
+import { updatePassword, signOut } from "firebase/auth";
 import { doc, updateDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { User, Lock, LogOut, Save, AlertCircle, Camera } from "lucide-react";
