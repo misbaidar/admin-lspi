@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme {
+  /* Warna Brand LSPI */
+  --color-brand-main: #004368;
+  --color-brand-dark: #002C46;
+  --color-brand-accent: #C0D9E0;
+  --color-lspi-main: #004368;
+  --color-lspi-dark: #002C46;
+  --color-lspi-light-accent: #C0D9E0;
+  
+  /* Warna Status (Penting untuk Admin Panel) */
+  --color-danger: #ef4444;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+
+  /* Font */
+  --default-font-family: sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--default-font-family);
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+}
+
+/* Custom Scrollbar untuk Admin */
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full hover:bg-gray-400;
+  }
+}
+
+/* Force bullet points and numbers to show */
+.wmde-markdown ul {
+  list-style-type: disc !important;
+  @apply my-4;
+}
+
+.wmde-markdown ol {
+  list-style-type: decimal !important;
+  @apply my-4;
+}
