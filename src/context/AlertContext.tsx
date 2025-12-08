@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import GlobalAlert from '../components/ui/GlobalAlert';
 
 type AlertType = 'success' | 'error' | 'info' | 'warning';

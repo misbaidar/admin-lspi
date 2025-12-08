@@ -11,7 +11,7 @@ import AdminRoute from "./components/auth/AdminRoute";
 import { AlertProvider } from "./context/AlertContext";
 import ArticleForm from "./pages/articles/ArticleForm";
 // Komponen Pembungkus Protected
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+const ProtectedRoute = ({ children }: { children: React.JSX.Element }) => {
   const { user, loading } = useAuth();
   
   if (loading) return <div className="p-10 text-center">Loading...</div>; // Handling loading state
