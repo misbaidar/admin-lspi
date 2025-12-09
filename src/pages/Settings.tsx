@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { updatePassword, signOut } from "firebase/auth";
 import { doc, updateDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { User, Lock, LogOut, Save, AlertCircle, Camera } from "lucide-react";
+import { User, Lock, LogOut, Save, AlertCircle } from "lucide-react";
 
 import { auth, db } from "../firebase/config";
 import { useAuth } from "../context/AuthContext";

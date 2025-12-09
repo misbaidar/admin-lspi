@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import MDEditor from "@uiw/react-md-editor";
-import { Save, ArrowLeft, Loader2, Image as ImageIcon, Camera } from "lucide-react"; // Added Icons
+import { Save, ArrowLeft, Loader2, Image as ImageIcon } from "lucide-react"; // Added Icons
 
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
