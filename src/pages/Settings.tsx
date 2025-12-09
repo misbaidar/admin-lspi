@@ -211,7 +211,7 @@ const Settings = () => {
                  <input 
                     type="file" 
                     id="photo-upload" 
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     accept="image/*"
                     onChange={handleImageChange}
                  />
@@ -226,9 +226,6 @@ const Settings = () => {
                        </div>
                      )}
                    </div>
-                   <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                     <Camera className="w-8 h-8 text-white" />
-                   </div>
                  </div>
 
                  <div className="space-y-1">
@@ -236,7 +233,7 @@ const Settings = () => {
                      <span className="text-brand-main">Klik upload</span> atau drag & drop
                    </p>
                    <p className="text-xs text-gray-500">
-                     Otomatis dikompres (Max 300px)
+                     Format JPG, PNG  (Max 300px)
                    </p>
                  </div>
                </div>

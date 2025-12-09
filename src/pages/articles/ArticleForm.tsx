@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import MDEditor from "@uiw/react-md-editor";
-import { Save, ArrowLeft, Loader2 } from "lucide-react";
+import { Save, ArrowLeft, Loader2, Image as ImageIcon, Camera } from "lucide-react"; // Added Icons
 
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -29,18 +29,85 @@ const ArticleForm = () => {
   const [content, setContent] = useState<string>(""); 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(isEditMode); // Loading hanya jika edit
+  const [isDragOver, setIsDragOver] = useState(false); // State for Drag & Drop style
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<ArticleFormInputs>({
     defaultValues: {
       status: "Draft",
       category: "Opini",
       tags: [],
+      thumbnail: "",
       // Jika mode create, default penulis = user login
       author: userProfile?.displayName || "Admin LSPI" 
     }
   });
 
-  // 1. Fetch Data (Hanya jika Edit Mode)
+  // --- 1. IMAGE PROCESSING LOGIC (Base64) ---
+  // Sama seperti di Profile Settings, tapi Max Width 800px agar tidak pecah untuk artikel
+  const processImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 800; // Lebih besar dari profil (300) agar bagus di artikel
+          const scaleSize = MAX_WIDTH / img.width;
+          
+          // Jika gambar asli lebih kecil dari MAX_WIDTH, jangan di-upscale
+          if (img.width > MAX_WIDTH) {
+              canvas.width = MAX_WIDTH;
+              canvas.height = img.height * scaleSize;
+          } else {
+              canvas.width = img.width;
+              canvas.height = img.height;
+          }
+
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          // Convert ke Base64 (JPEG quality 0.8)
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+          resolve(dataUrl);
+        };
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleFileSelect = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      showAlert("Format Salah", "Mohon upload file gambar (JPG/PNG).", "error");
+      return;
+    }
+    try {
+      // Proses konversi ke Base64
+      const resizedBase64 = await processImage(file);
+      // Set value ke React Hook Form
+      setValue("thumbnail", resizedBase64); 
+    } catch (error) {
+      showAlert("Gagal", "Gagal memproses gambar.", "error");
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileSelect(e.target.files[0]);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileSelect(e.dataTransfer.files[0]);
+    }
+  };
+  // ------------------------------------------
+
+  // 2. Fetch Data (Hanya jika Edit Mode)
   useEffect(() => {
     const fetchData = async () => {
       if (!isEditMode || !id) return;
@@ -74,7 +141,7 @@ const ArticleForm = () => {
     fetchData();
   }, [id, isEditMode, navigate, reset, showAlert]);
 
-  // 2. Auto-generate Slug
+  // 3. Auto-generate Slug
   const titleValue = watch("title");
   useEffect(() => {
     // Update slug jika judul berubah dan tidak sedang loading data awal edit
@@ -84,11 +151,17 @@ const ArticleForm = () => {
   }, [titleValue, setValue, isLoadingData]);
 
   const tagsValue = watch("tags");
+  const thumbnailValue = watch("thumbnail"); // Watch thumbnail untuk preview
 
-  // 3. Handle Submit (Create / Update)
+  // 4. Handle Submit (Create / Update)
   const onSubmit = async (data: ArticleFormInputs) => {
     if (!content || content.trim() === "") {
       showAlert("Validasi Gagal", "Konten artikel tidak boleh kosong!", "error");
+      return;
+    }
+
+    if (!data.thumbnail) {
+      showAlert("Validasi Gagal", "Thumbnail artikel wajib diupload!", "error");
       return;
     }
 
@@ -230,19 +303,54 @@ const ArticleForm = () => {
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <Label>Thumbnail Image (URL)</Label>
-            <Input {...register("thumbnail", { required: "Link gambar wajib diisi" })} />
+            <Label>Thumbnail Image</Label>
             
-            {watch("thumbnail") && (
-              <div className="mt-4 rounded-lg overflow-hidden border border-gray-200 aspect-video bg-gray-50">
-                <img 
-                  src={watch("thumbnail")} 
-                  alt="Preview" 
-                  className="w-full h-full object-cover"
-                  onError={(e) => (e.currentTarget.src = "https://via.placeholder.com/300?text=Error")} 
+            {/* DRAG AND DROP ZONE */}
+            <div 
+                className={`
+                mt-2 relative border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all cursor-pointer overflow-hidden
+                ${isDragOver ? 'border-brand-main bg-brand-main/5' : 'border-gray-300 hover:border-brand-main hover:bg-gray-50'}
+                `}
+                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={handleDrop}
+            >
+                <input 
+                    type="file" 
+                    id="thumbnail-upload" 
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    accept="image/*"
+                    onChange={handleImageChange}
                 />
-              </div>
-            )}
+
+                {/* Preview Area */}
+                {thumbnailValue ? (
+                    <div className="w-full relative group">
+                        <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                            <img 
+                                src={thumbnailValue} 
+                                alt="Thumbnail Preview" 
+                                className="w-full h-full object-cover" 
+                            />
+                        </div>
+                    </div>
+                ) : (
+                    <div className="py-8 flex flex-col items-center">
+                        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3 text-gray-400">
+                             <ImageIcon className="w-6 h-6" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-700">
+                            <span className="text-brand-main">Klik upload</span> atau drag & drop
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Format JPG, PNG (Max 800px width)
+                        </p>
+                    </div>
+                )}
+            </div>
+            
+            {/* Hidden Input untuk validasi required bawaan form (opsional, sudah dihandle di onSubmit) */}
+            <input type="hidden" {...register("thumbnail")} />
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
