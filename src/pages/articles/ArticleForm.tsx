@@ -8,7 +8,7 @@ import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Label } from "../../components/ui/Label";
 // Import createArticle dan updateArticle
-import { getArticleById, updateArticle, createArticle, generateSlug } from "../../services/articleService";
+import { getArticleById, updateArticle, createArticle, generateSlug, triggerPublicRebuild } from "../../services/articleService";
 import type { Article } from "../../types";
 import { TagInput } from "../../components/ui/TagInput";
 import { useAuth } from "../../context/AuthContext";
@@ -180,6 +180,13 @@ const ArticleForm = () => {
         // --- LOGIC CREATE ---
         await createArticle(articleData);
         showAlert("Berhasil", "Artikel baru berhasil dibuat.", "success");
+      }
+      
+      // 🔥 TRIGGER REBUILD OTOMATIS
+      // Hanya jika statusnya Published, agar hemat resource
+      if (data.status === 'Published') {
+         // Kita jalankan di background (tanpa await) agar Admin tidak lemot
+         triggerPublicRebuild(); 
       }
       
       navigate("/articles");

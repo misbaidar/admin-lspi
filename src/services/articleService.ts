@@ -106,3 +106,19 @@ export const deleteArticle = async (id: string) => {
     throw error;
   }
 };
+
+export const triggerPublicRebuild = async () => {
+  const hookUrl = import.meta.env.VITE_VERCEL_DEPLOY_HOOK;
+  
+  if (!hookUrl) {
+    console.warn("Deploy Hook URL not found.");
+    return;
+  }
+
+  try {
+    await fetch(hookUrl, { method: "POST" });
+    console.log("Rebuild signal sent to Vercel.");
+  } catch (error) {
+    console.error("Failed to trigger rebuild:", error);
+  }
+};
