@@ -10,7 +10,7 @@ import {
 } from "date-fns"; 
 import { useAuth } from "../../context/AuthContext";
 import { id as indonesia } from "date-fns/locale";
-import { Plus, Search, Edit, Trash2, FileText, Filter, X, ExternalLink } from "lucide-react";
+import { Plus, Search, Edit, Trash2, FileText, Filter, X, ExternalLink, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -349,11 +349,7 @@ const ArticleList = () => {
                             disabled={isDeleting === article.id}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
                           >
-                            {isDeleting === article.id ? (
-                              <span className="block w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></span>
-                            ) : (
-                              <Trash2 className="w-4 h-4" />
-                            )}
+                            <Trash2 className="w-4 h-4" />
                           </button>
                           )}
                         {!canEdit && <span className="text-gray-300 text-xs italic">Read Only</span>}
@@ -366,6 +362,14 @@ const ArticleList = () => {
           </div>
         )}
       </div>
+        {isDeleting && (
+            <div className="fixed inset-0 z-1000 flex items-center justify-center bg-white/50 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-3 border border-gray-100">
+                <Loader2 className="w-8 h-8 text-lspi-main animate-spin" />
+                <p className="text-sm font-semibold text-gray-700">Menghapus data...</p>
+              </div>
+            </div>
+          )}
     </div>
   );
 };
