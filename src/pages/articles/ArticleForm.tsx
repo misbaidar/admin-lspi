@@ -181,7 +181,7 @@ const ArticleForm = () => {
         await createArticle(articleData);
         showAlert("Berhasil", "Artikel baru berhasil dibuat.", "success");
       }
-      
+
       // 🔥 TRIGGER REBUILD OTOMATIS
       // Hanya jika statusnya Published, agar hemat resource
       if (data.status === 'Published') {
@@ -310,7 +310,7 @@ const ArticleForm = () => {
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <Label>Thumbnail Image</Label>
+            <Label>Gambar Thumbnail</Label>
             
             {/* DRAG AND DROP ZONE */}
             <div 
