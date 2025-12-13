@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { 
   Search, Plus, Edit, Trash2, X, Save, Shield, ShieldAlert, 
   User,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { getAllUsers, deleteUser, saveUserProfile } from "../../services/userService";
 import type { UserProfile } from "../../types";
@@ -24,6 +26,10 @@ const UserList = () => {
   const [currentUser, setCurrentUser] = useState<Partial<UserProfile>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // --- PAGINATION STATE ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
 
   // 2. Panggil Hook Alert
   const { showAlert, showConfirm } = useAlert();
@@ -151,6 +157,17 @@ const UserList = () => {
     u.position.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // --- PAGINATION LOGIC ---
+  const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <div className="space-y-6 relative pb-20">
       
@@ -206,28 +223,29 @@ const UserList = () => {
                 ) : filteredUsers.length === 0 ? (
           <div className="p-12 text-center text-gray-500">Tidak ada pengguna ditemukan.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3">Nama Pengguna</th>
-                  <th className="px-6 py-3">Jabatan</th>
-                  <th className="px-6 py-3">Akses</th>
-                  <th className="px-6 py-3 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.uid} className="bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                    {/* Nama & Email */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-brand-main/10 flex items-center justify-center text-brand-main font-bold shrink-0">
-                          {user.photoURL ? (
-                            <img 
-                                src={user.photoURL}
-                                alt={user.displayName}
-                                className="w-10 h-10 rounded-full object-cover"
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3">Nama Pengguna</th>
+                    <th className="px-6 py-3">Jabatan</th>
+                    <th className="px-6 py-3">Akses</th>
+                    <th className="px-6 py-3 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedUsers.map((user) => (
+                    <tr key={user.uid} className="bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                      {/* Nama & Email */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-brand-main/10 flex items-center justify-center text-brand-main font-bold shrink-0">
+                            {user.photoURL ? (
+                              <img 
+                                  src={user.photoURL}
+                                  alt={user.displayName}
+                                  className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (
                             user.displayName.charAt(0).toUpperCase()
@@ -284,7 +302,47 @@ const UserList = () => {
               </tbody>
             </table>
           </div>
-        )}
+
+          {/* PAGINATION CONTROLS */}
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Menampilkan {startIndex + 1}–{Math.min(endIndex, filteredUsers.length)} dari {filteredUsers.length} pengguna
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 text-gray-600 hover:bg-white rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="Halaman Sebelumnya"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 rounded text-sm transition-colors ${
+                      currentPage === page
+                        ? "bg-brand-main text-white"
+                        : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 text-gray-600 hover:bg-white rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="Halaman Berikutnya"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </>)}
       </div>
 
       {/* --- MODAL FORM (CREATE / EDIT) --- */}

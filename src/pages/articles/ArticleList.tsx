@@ -10,7 +10,7 @@ import {
 } from "date-fns"; 
 import { useAuth } from "../../context/AuthContext";
 import { id as indonesia } from "date-fns/locale";
-import { Plus, Search, Edit, Trash2, FileText, Filter, X, ExternalLink, Loader2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, FileText, Filter, X, ExternalLink, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -31,11 +31,15 @@ const ArticleList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [filterTopics, setFilterTopics] = useState<string[]>([]); 
-  const [filterDateRange, setFilterDateRange] = useState("all"); 
+  const [filterTopics, setFilterTopics] = useState<string[]>([]);
+  const [filterDateRange, setFilterDateRange] = useState("all");
 
   // State untuk memastikan default value hanya diset sekali
   const [hasSetDefault, setHasSetDefault] = useState(false);
+
+  // --- PAGINATION STATE ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
 
   // LOGIC BARU: Default Search = Display Name (Jika bukan Admin)
   useEffect(() => {
@@ -123,13 +127,25 @@ const ArticleList = () => {
     return matchSearch && matchCategory && matchStatus && matchDate && matchTopic;
   });
 
+  // --- PAGINATION LOGIC ---
+  const totalPages = Math.ceil(filteredArticles.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedArticles = filteredArticles.slice(startIndex, endIndex);
+
   const resetFilters = () => {
     setSearchTerm("");
     setFilterCategory("");
     setFilterStatus("");
     setFilterDateRange("all");
-    setFilterTopics([]); 
+    setFilterTopics([]);
+    setCurrentPage(1);
   };
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterCategory, filterStatus, filterDateRange, filterTopics]);
 
   const hasActiveFilters = searchTerm || filterCategory || filterStatus || filterDateRange !== "all" || filterTopics.length > 0;
 
@@ -253,21 +269,22 @@ const ArticleList = () => {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 w-[300px]">Judul</th>
-                  <th className="px-6 py-3">Kategori</th>
-                  <th className="px-6 py-3 w-[200px]">Topik</th> 
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3">Tanggal</th>
-                  <th className="px-6 py-3 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredArticles.map((article) => {
-                  const canEdit = isAdmin || article.author === userProfile?.displayName;
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 w-[300px]">Judul</th>
+                    <th className="px-6 py-3">Kategori</th>
+                    <th className="px-6 py-3 w-[200px]">Topik</th> 
+                    <th className="px-6 py-3">Status</th>
+                    <th className="px-6 py-3">Tanggal</th>
+                    <th className="px-6 py-3 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedArticles.map((article) => {
+                    const canEdit = isAdmin || article.author === userProfile?.displayName;
                 return (
                   <tr key={article.id} className="bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 font-medium text-gray-900">
@@ -359,7 +376,48 @@ const ArticleList = () => {
                 )})}
               </tbody>
             </table>
-          </div>
+            </div>
+
+            {/* PAGINATION CONTROLS */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Menampilkan {startIndex + 1}–{Math.min(endIndex, filteredArticles.length)} dari {filteredArticles.length} artikel
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 text-gray-600 hover:bg-white rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="Halaman Sebelumnya"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded text-sm transition-colors ${
+                        currentPage === page
+                          ? "bg-brand-main text-white"
+                          : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 text-gray-600 hover:bg-white rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="Halaman Berikutnya"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
         {isDeleting && (
