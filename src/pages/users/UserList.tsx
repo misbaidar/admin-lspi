@@ -4,7 +4,9 @@ import {
   User,
   Loader2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import { getAllUsers, deleteUser, saveUserProfile } from "../../services/userService";
 import type { UserProfile } from "../../types";
@@ -168,6 +170,14 @@ const UserList = () => {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  // Helper function to check if user has a real Firebase auth account
+  const hasAuthAccount = (uid: string | undefined) => {
+    if (!uid) return false;
+    // Firebase UIDs don't contain @ symbol
+    // If uid contains @, it's an email (means user hasn't registered yet)
+    return !uid.includes("@");
+  };
+
   return (
     <div className="space-y-6 relative pb-20">
       
@@ -231,6 +241,7 @@ const UserList = () => {
                     <th className="px-6 py-3">Nama Pengguna</th>
                     <th className="px-6 py-3">Jabatan</th>
                     <th className="px-6 py-3">Akses</th>
+                    <th className="px-6 py-3">Status Akun</th>
                     <th className="px-6 py-3 text-right">Aksi</th>
                   </tr>
                 </thead>
@@ -246,103 +257,119 @@ const UserList = () => {
                                   src={user.photoURL}
                                   alt={user.displayName}
                                   className="w-10 h-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            user.displayName.charAt(0).toUpperCase()
-                          )}
+                              />
+                            ) : (
+                              user.displayName.charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900">{user.displayName}</div>
+                            <div className="text-xs text-gray-500">{user.email}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-medium text-gray-900">{user.displayName}</div>
-                          <div className="text-xs text-gray-500">{user.email}</div>
+                      </td>
+
+                      {/* Jabatan */}
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 border border-gray-200 font-medium text-xs">
+                          {user.position}
+                        </span>
+                      </td>
+
+                      {/* Role / Akses */}
+                      <td className="px-6 py-4">
+                        {user.role === 'admin' ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-brand-main bg-brand-main/10 px-2 py-1 rounded">
+                            <Shield className="w-3 h-3" /> Admin
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs text-brand-main bg-brand-main/10 px-2 py-1 rounded">
+                            <User className="w-3 h-3" /> Staff
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Status Akun */}
+                      <td className="px-6 py-4">
+                        {hasAuthAccount(user.uid) ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 px-2.5 py-1 rounded-full border border-green-200">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            Aktif
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full border border-gray-200">
+                            <XCircle className="w-3.5 h-3.5" />
+                            Non-Aktif
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Tombol Aksi */}
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            onClick={() => handleEdit(user)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit User"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(user.uid, user.displayName)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Hapus User"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                      </div>
-                    </td>
-
-                    {/* Jabatan */}
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 border border-gray-200 font-medium text-xs">
-                        {user.position}
-                      </span>
-                    </td>
-
-                    {/* Role / Akses */}
-                    <td className="px-6 py-4">
-                      {user.role === 'admin' ? (
-                        <span className="inline-flex items-center gap-1 text-xs text-brand-main bg-brand-main/10 px-2 py-1 rounded">
-                          <Shield className="w-3 h-3" /> Admin
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs text-brand-main bg-brand-main/10 px-2 py-1 rounded">
-                          <User className="w-3 h-3" /> Staff
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Tombol Aksi */}
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button 
-                          onClick={() => handleEdit(user)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit User"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(user.uid, user.displayName)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Hapus User"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* PAGINATION CONTROLS */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              Menampilkan {startIndex + 1}–{Math.min(endIndex, filteredUsers.length)} dari {filteredUsers.length} pengguna
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-2 text-gray-600 hover:bg-white rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                title="Halaman Sebelumnya"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <div className="flex items-center gap-2">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 rounded text-sm transition-colors ${
-                      currentPage === page
-                        ? "bg-brand-main text-white"
-                        : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+
+            {/* PAGINATION CONTROLS */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Menampilkan {startIndex + 1}–{Math.min(endIndex, filteredUsers.length)} dari {filteredUsers.length} pengguna
               </div>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="p-2 text-gray-600 hover:bg-white rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                title="Halaman Berikutnya"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 text-gray-600 hover:bg-white rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="Halaman Sebelumnya"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded text-sm transition-colors ${
+                        currentPage === page
+                          ? "bg-brand-main text-white"
+                          : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 text-gray-600 hover:bg-white rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="Halaman Berikutnya"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
-        </>)}
+          </>
+        )}
       </div>
 
       {/* --- MODAL FORM (CREATE / EDIT) --- */}
