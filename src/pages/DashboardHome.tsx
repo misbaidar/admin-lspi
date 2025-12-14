@@ -1,7 +1,7 @@
 // src/pages/DashboardHome.tsx
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FileText, Plus, Users, PenTool, CheckCircle, Loader2 } from "lucide-react";
+import { FileText, Plus, Users, PenTool, CheckCircle, Loader2, Trophy } from "lucide-react";
 import { format } from "date-fns";
 import { id as indonesia } from "date-fns/locale";
 
@@ -57,6 +57,24 @@ const DashboardHome = () => {
     ? articles.slice(0, 5) 
     : myArticles.slice(0, 5);
 
+  // --- AUTHOR LEADERBOARD (top authors by article count) ---
+  const authorCountsMap = articles.reduce((acc: Record<string, number>, a) => {
+    const name = (a.author || "").trim();
+    if (!name) return acc;
+    const lower = name.toLowerCase();
+    // Ignore unknown / placeholder authors
+    const blacklist = ["tanpa nama", "unknown", "-", "n/a", "anonymous", "null", "undefined"];
+    if (blacklist.includes(lower)) return acc;
+    acc[name] = (acc[name] || 0) + 1;
+    return acc;
+  }, {});
+  
+  const authorLeaderboard = Object.entries(authorCountsMap)
+    .map(([author, count]) => ({ author, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5); // top 5
+  
+
   return (
     <div className="space-y-8 pb-10">
       
@@ -87,70 +105,101 @@ const DashboardHome = () => {
           </div>
         </div>
       </div>
+      <div className="flex flex-col md:flex-row gap-6">  
+        {/* 2. STATS GRID */}
+        <div className="grow grid grid-cols-2 gap-6">
+          
+          {/* Card 1: Statistik Utama (Beda Admin vs Staff) */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-gray-500 text-sm font-medium">
+                {isAdmin ? "Total Pengguna" : "Artikel Saya"}
+              </h3>
+              <div className={`p-2 rounded-lg ${isAdmin ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-brand-main'}`}>
+                {isAdmin ? <Users className="h-5 w-5" /> : <PenTool className="h-5 w-5" />}
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-gray-900">
+              {loading ? <Loader2 className="h-8 w-8 animate-spin text-brand-main" /> : (isAdmin ? userCount : myArticles.length)}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              {isAdmin ? "Anggota aktif" : "Total tulisan Anda"}
+            </p>
+          </div>
 
-      {/* 2. STATS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {/* Card 1: Statistik Utama (Beda Admin vs Staff) */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-           <div className="flex items-center justify-between mb-4">
-             <h3 className="text-gray-500 text-sm font-medium">
-               {isAdmin ? "Total Pengguna" : "Artikel Saya"}
-             </h3>
-             <div className={`p-2 rounded-lg ${isAdmin ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-brand-main'}`}>
-               {isAdmin ? <Users className="h-5 w-5" /> : <PenTool className="h-5 w-5" />}
-             </div>
-           </div>
-           <p className="text-3xl font-bold text-gray-900">
-             {loading ? <Loader2 className="h-8 w-8 animate-spin text-brand-main" /> : (isAdmin ? userCount : myArticles.length)}
-           </p>
-           <p className="text-xs text-gray-400 mt-1">
-             {isAdmin ? "Anggota aktif" : "Total tulisan Anda"}
-           </p>
+          {/* Card 2: Total Artikel (Global) */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-gray-500 text-sm font-medium">Total Arsip</h3>
+              <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
+                <FileText className="h-5 w-5" />
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-gray-900">{loading ? <Loader2 className="h-8 w-8 animate-spin text-brand-main" /> : totalArticles}</p>
+            <p className="text-xs text-gray-400 mt-1">Semua artikel sistem</p>
+          </div>
+
+          {/* Card 3: Status Publikasi */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-gray-500 text-sm font-medium">Terbit</h3>
+              <div className="p-2 bg-green-50 text-green-600 rounded-lg">
+                <CheckCircle className="h-5 w-5" />
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-gray-900">{loading ? <Loader2 className="h-8 w-8 animate-spin text-brand-main" /> : publishedCount}</p>
+            <p className="text-xs text-gray-400 mt-1">Siap dibaca publik</p>
+          </div>
+
+          {/* Card 4: Draft Pribadi (Untuk Reminder) */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-gray-500 text-sm font-medium">Draft Saya</h3>
+              <div className="p-2 bg-gray-100 text-gray-600 rounded-lg">
+                <PenTool className="h-5 w-5" />
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-gray-900">{loading ? <Loader2 className="h-8 w-8 animate-spin text-brand-main" /> : myDrafts}</p>
+            <p className="text-xs text-gray-400 mt-1">Belum dipublikasi</p>
+          </div>
         </div>
-
-        {/* Card 2: Total Artikel (Global) */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        {/* 2.5 AUTHOR LEADERBOARD */}
+        <div className="grow bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-500 text-sm font-medium">Total Arsip</h3>
-            <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
-              <FileText className="h-5 w-5" />
+            <h3 className="text-gray-500 text-sm font-medium">Top Penulis</h3>
+            <div className="p-2 bg-yellow-50 text-yellow-600 rounded-lg">
+              <Trophy className="h-5 w-5" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-gray-900">{loading ? <Loader2 className="h-8 w-8 animate-spin text-brand-main" /> : totalArticles}</p>
-          <p className="text-xs text-gray-400 mt-1">Semua artikel sistem</p>
-        </div>
-
-        {/* Card 3: Status Publikasi */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-500 text-sm font-medium">Terbit</h3>
-            <div className="p-2 bg-green-50 text-green-600 rounded-lg">
-              <CheckCircle className="h-5 w-5" />
+          {loading ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="h-6 w-6 animate-spin text-brand-main" />
             </div>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">{loading ? <Loader2 className="h-8 w-8 animate-spin text-brand-main" /> : publishedCount}</p>
-          <p className="text-xs text-gray-400 mt-1">Siap dibaca publik</p>
-        </div>
-
-        {/* Card 4: Draft Pribadi (Untuk Reminder) */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-500 text-sm font-medium">Draft Saya</h3>
-            <div className="p-2 bg-gray-100 text-gray-600 rounded-lg">
-               <PenTool className="h-5 w-5" />
-            </div>
-          </div>
-           <p className="text-3xl font-bold text-gray-900">{loading ? <Loader2 className="h-8 w-8 animate-spin text-brand-main" /> : myDrafts}</p>
-           <p className="text-xs text-gray-400 mt-1">Belum dipublikasi</p>
+          ) : authorLeaderboard.length === 0 ? (
+            <p className="text-sm text-gray-400">Belum ada penulis terdaftar.</p>
+          ) : (
+            <ul className="space-y-3">
+              {authorLeaderboard.map((item, idx) => (
+                <li key={item.author} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{item.author}</div>
+                      <div className="text-xs text-gray-400">Artikel: {item.count}</div>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600 font-semibold">{idx + 1}</div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
-      
+                 
       {/* 3. RECENT ACTIVITY TABLE */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
            <h3 className="font-semibold text-gray-800">
-             {isAdmin ? "Aktivitas Terbaru Sistem" : "Tulisan Terbaru Anda"}
+             {isAdmin ? "Artikel Terbaru" : "Tulisan Terbaru Anda"}
            </h3>
            <Link to="/articles" className="text-xs text-brand-main hover:underline font-medium">
               Lihat Semua &rarr;

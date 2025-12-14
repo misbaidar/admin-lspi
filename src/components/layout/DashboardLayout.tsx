@@ -1,7 +1,7 @@
 // src/components/layout/DashboardLayout.tsx
 import { useState } from "react";
 import { Outlet, Link } from "react-router-dom";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext"; // Import Auth
 import Sidebar from "./Sidebar"; // Pastikan Sidebar ada di folder yang sama
 
@@ -52,7 +52,7 @@ const DashboardLayout = () => {
           <div className="flex items-center gap-4">
             
             {/* User Dropdown / Info */}
-            <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
+            <Link to="/settings" className="group flex items-center gap-3 pl-4 border-l border-gray-200">
               <div className="text-right hidden sm:block">
                 <div className="text-sm font-bold text-gray-900 leading-none">
                   {userProfile?.displayName || "User"}
@@ -62,17 +62,17 @@ const DashboardLayout = () => {
                 </div>
               </div>
               
-              <Link to="/settings" className="w-9 h-9 rounded-full bg-brand-main text-white flex items-center justify-center font-bold shadow-sm hover:ring-2 hover:ring-offset-2 hover:ring-brand-main transition-all">
+              <div className="w-9 h-9 rounded-full bg-brand-main/10 text-brand-main flex items-center justify-center font-bold shadow-sm group-hover:ring-2 group-hover:ring-offset-2 group-hover:ring-brand-main transition-all">
                 {userProfile?.photoURL ? (
                   <img 
                     src={userProfile.photoURL} 
-                    alt="User Avatar" 
+                    alt={userProfile.displayName} 
                     className="w-9 h-9 rounded-full object-cover"/>
                   ) : (
-                  <User className="w-5 h-5" />
+                  userProfile?.displayName.charAt(0).toUpperCase()
                 )}
-              </Link>
-            </div>
+              </div>
+            </Link>
           </div>
         </header>
 
