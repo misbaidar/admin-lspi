@@ -34,7 +34,7 @@ const Login = () => {
       await signInWithEmailAndPassword(auth, email, password);
       // showAlert tidak perlu di sini karena langsung redirect, 
       // tapi jika mau sapaan selamat datang bisa ditambahkan sebelum navigate
-      navigate("/"); 
+      window.location.href = "/"; 
     } catch (error: any) {
       console.error(error);
       // Ganti Alert Biasa
@@ -49,9 +49,8 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // 1. SANITASI INPUT (Hapus spasi depan/belakang)
     const cleanEmail = email.trim();
-
+    
     // Validasi Format Email Sederhana
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(cleanEmail)) {
@@ -72,58 +71,80 @@ const Login = () => {
       return;
     }
 
+    let userCredential;
+
     try {
-      // 2. CEK WHITELIST MENGGUNAKAN CLEAN EMAIL
+      // 1. CREATE AUTH USER FIRST (So we have a UID and token)
+      userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+      const user = userCredential.user;
+
+      // 2. NOW CHECK FIRESTORE (Authenticated)
+      // Find the document that matches this email (the whitelist entry created by admin)
       const q = query(collection(db, "users"), where("email", "==", cleanEmail));
       const querySnapshot = await getDocs(q);
 
+      // If NOT in whitelist
       if (querySnapshot.empty) {
-        showAlert("Akses Ditolak", "Email Anda belum terdaftar di sistem LSPI. Silakan hubungi Admin.", "error");
+        // ROLLBACK: Delete the auth user we just created because they aren't allowed.
+        await user.delete(); 
+        showAlert("Akses Ditolak", "Email Anda belum didaftarkan oleh Admin.", "error");
         setIsLoading(false);
         return;
       }
 
-      const preDataDoc = querySnapshot.docs[0];
+      // 3. WHITELIST FOUND - PROCEED MIGRATION
+      // Since query might return the NEW doc we are about to create (if retrying), 
+      // we need to find the OLD doc (where ID != user.uid).
+      // However, usually the old doc has a random ID from addDoc.
+      
+      const preDataDoc = querySnapshot.docs.find(d => d.id !== user.uid);
+      
+      // If we only found the current user doc (already migrated), just login
+      if (!preDataDoc) {
+          showAlert("Info", "Akun ini sudah aktif. Mengalihkan...", "success");
+          navigate("/");
+          return;
+      }
+
       const preData = preDataDoc.data();
 
-      // 3. BUAT AKUN DI FIREBASE AUTH (Gunakan cleanEmail)
-      const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-      const user = userCredential.user;
-
+      // Update Auth Profile Name
       if (preData.displayName) {
         await updateProfile(user, {
             displayName: preData.displayName
         });
       }
 
-      // 4. MIGRASI DATA
+      // 4. CREATE NEW PROFILE DOC (Using UID as Key)
       const newProfileData = {
         ...preData,
         uid: user.uid,
-        email: cleanEmail, // Pastikan yang disimpan juga yang bersih
+        email: cleanEmail,
         photoURL: "",
+        createdAt: new Date().toISOString()
       };
 
+      // Write to Firestore (Allowed by rules because keys match uid)
       await setDoc(doc(db, "users", user.uid), newProfileData);
 
-      if (preDataDoc.id !== user.uid) {
-        await deleteDoc(doc(db, "users", preDataDoc.id));
-      }
+      // 5. DELETE OLD WHITELIST DOC
+      // Allowed by rules because resource.data.email == request.auth.token.email
+      await deleteDoc(doc(db, "users", preDataDoc.id));
 
-      showAlert("Registrasi Berhasil", "Akun Anda telah aktif. Selamat datang di LSPI!", "success");
-      navigate("/");
+      showAlert("Registrasi Berhasil", "Akun Anda telah aktif.", "success");
+      window.location.href = "/";
 
     } catch (error: any) {
       console.error(error);
       if (error.code === 'auth/email-already-in-use') {
-        showAlert("Email Terdaftar", "Email ini sudah memiliki akun aktif. Silakan Login.", "info");
-      } else if (error.code === 'auth/invalid-email') {
+        showAlert("Email Terdaftar", "Email ini sudah aktif. Silakan Login.", "info");
+      }  else if (error.code === 'auth/invalid-email') {
         // Tangkap error spesifik ini
         showAlert("Email Tidak Valid", "Format email tidak diterima oleh sistem.", "error");
       } else if (error.code === 'auth/weak-password') {
         showAlert("Password Lemah", "Password terlalu lemah (min 6 karakter).", "error");
       } else {
-        showAlert("Error Sistem", "Terjadi kesalahan saat aktivasi akun.", "error");
+        showAlert("Error Sistem", error.message, "error");
       }
     } finally {
       setIsLoading(false);
