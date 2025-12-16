@@ -6,6 +6,8 @@ import {
   deleteDoc, 
   collection, 
   getDocs,
+  query,
+  orderBy,
   serverTimestamp 
 } from "firebase/firestore";
 import { db } from "../firebase/config";
@@ -44,10 +46,11 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
   return null;
 };
 
-// GET ALL (READ) - DIPERBAIKI
+// GET ALL (READ) - ordered by createdAt DESC
 export const getAllUsers = async (): Promise<UserProfile[]> => {
   try {
-    const snapshot = await getDocs(collection(db, "users"));
+    const q = query(collection(db, "users"), orderBy("updatedAt", "desc"));
+    const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => {
       const data = doc.data();
       // PENTING: Gabungkan data dengan ID dokumen agar UID tidak undefined

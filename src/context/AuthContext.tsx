@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth"; // Tambah signOut
+import { onAuthStateChanged } from "firebase/auth";
 import type { User } from "firebase/auth"; 
 import { auth } from "../firebase/config";
-import { getUserProfile } from "../services/userService";
-import type { UserProfile } from "../types";
+import { getUserProfile } from "../services/userService"; // Import baru
+import type { UserProfile } from "../types"; // Import tipe
 
 interface AuthContextType {
   user: User | null;
-  userProfile: UserProfile | null;
+  userProfile: UserProfile | null; // Data tambahan (jabatan dll)
   loading: boolean;
   isAdmin: boolean;
 }
@@ -28,32 +28,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
       
       if (currentUser) {
-        // 1. Coba ambil data profil dulu
-        const profile = await getUserProfile(currentUser.uid);
-
-        // --- LOGIC BARU: CEK BLOKIR ---
-        // Jika user login di Auth, tapi dokumennya sudah dihapus Admin di Firestore
-        if (!profile) {
-          console.warn("Akun Auth ada, tapi Data Firestore tidak ditemukan. Melakukan Logout paksa.");
-          await signOut(auth); // Tendang user keluar
-          setUser(null);
-          setUserProfile(null);
-          setLoading(false);
-          return;
-        }
-        // ------------------------------
-
-        // 2. Jika profil ada, baru set state
-        // PENTING: Hapus syncUserProfile dari sini jika fungsinya membuat user baru otomatis.
-        // Jika syncUserProfile hanya update "lastLogin", tidak apa-apa.
-        // await syncUserProfile(currentUser); 
+        // 1. Pastikan data user tercatat di DB
+        // await syncUserProfile(currentUser);
         
-        setUser(currentUser);
+        // 2. Ambil data profil lengkap
+        const profile = await getUserProfile(currentUser.uid);
         setUserProfile(profile);
       } else {
-        setUser(null);
         setUserProfile(null);
       }
       
