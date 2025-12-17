@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { 
   Search, Plus, Edit, Trash2, X, Save, Shield, ShieldAlert, 
   User,
@@ -32,6 +32,8 @@ const UserList = () => {
   // --- PAGINATION STATE ---
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
+  // ref to scroll into view on pagination
+  const topRef = useRef<HTMLDivElement | null>(null);
 
   // 2. Panggil Hook Alert
   const { showAlert, showConfirm } = useAlert();
@@ -170,6 +172,11 @@ const UserList = () => {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  // Scroll to top when pagination changes
+  useEffect(() => {
+    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [currentPage]);
+  
   // Helper function to check if user has a real Firebase auth account
   const hasAuthAccount = (uid: string | undefined) => {
     if (!uid) return false;
@@ -179,7 +186,7 @@ const UserList = () => {
   };
 
   return (
-    <div className="space-y-6 relative pb-20">
+    <div ref={topRef} className="space-y-6 relative pb-20">
       
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

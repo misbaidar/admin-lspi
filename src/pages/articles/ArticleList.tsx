@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { 
   format, 
@@ -40,6 +40,9 @@ const ArticleList = () => {
   // --- PAGINATION STATE ---
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
+
+  // ref to scroll into view on pagination
+  const topRef = useRef<HTMLDivElement | null>(null);
 
   // LOGIC BARU: Default Search = Display Name (Jika bukan Admin)
   useEffect(() => {
@@ -147,10 +150,15 @@ const ArticleList = () => {
     setCurrentPage(1);
   }, [searchTerm, filterCategory, filterStatus, filterDateRange, filterTopics]);
 
+  // Scroll component into view when pagination changes
+  useEffect(() => {
+    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [currentPage]);
+  
   const hasActiveFilters = searchTerm || filterCategory || filterStatus || filterDateRange !== "all" || filterTopics.length > 0;
 
   return (
-    <div className="space-y-6 pb-20">
+    <div ref={topRef} className="space-y-6 pb-20">
       
       {/* 1. Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
