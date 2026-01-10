@@ -46,7 +46,7 @@ const Sidebar = () => {
       <div className="p-4 border-t border-brand-main bg-brand-dark">
         {/* Link ke Web Publik */}
         <a 
-          href="https://lspi-uin.web.app" // Ganti nanti dengan URL asli production
+          href="https://lspiuinbdg.vercel.app" // Ganti nanti dengan URL asli production
           target="_blank"
           rel="noreferrer"
           className="flex items-center px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors"
