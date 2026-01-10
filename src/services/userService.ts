@@ -49,7 +49,7 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
 // GET ALL (READ) - ordered by createdAt DESC
 export const getAllUsers = async (): Promise<UserProfile[]> => {
   try {
-    const q = query(collection(db, "users"), orderBy("updatedAt", "desc"));
+    const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => {
       const data = doc.data();
