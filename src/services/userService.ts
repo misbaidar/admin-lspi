@@ -74,6 +74,8 @@ export const saveUserProfile = async (uid: string, data: Partial<UserProfile>) =
     
     // 1. Cek apakah dokumen sudah ada
     const userSnap = await getDoc(userRef);
+
+    const timestampStr = new Date().toISOString();
     
     const finalData = {
       ...data,
@@ -82,7 +84,7 @@ export const saveUserProfile = async (uid: string, data: Partial<UserProfile>) =
 
     // 2. Jika dokumen BELUM ada (data baru), tambahkan createdAt
     if (!userSnap.exists()) {
-      (finalData as any).createdAt = serverTimestamp();
+      (finalData as any).createdAt = timestampStr;
     }
 
     await setDoc(userRef, finalData, { merge: true });
