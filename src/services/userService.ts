@@ -49,7 +49,7 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
 // GET ALL (READ) - ordered by createdAt DESC
 export const getAllUsers = async (): Promise<UserProfile[]> => {
   try {
-    const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "users"), orderBy("updatedAt", "desc"));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => {
       const data = doc.data();
@@ -68,13 +68,25 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
 // CREATE / UPDATE
 export const saveUserProfile = async (uid: string, data: Partial<UserProfile>) => {
   try {
-    if (!uid) throw new Error("UID/Email is required for saving");
+    if (!uid) throw new Error("UID is required for saving");
     
     const userRef = doc(db, "users", uid);
-    await setDoc(userRef, {
-        ...data,
-        updatedAt: serverTimestamp()
-    }, { merge: true });
+    
+    // 1. Cek apakah dokumen sudah ada
+    const userSnap = await getDoc(userRef);
+    
+    const finalData = {
+      ...data,
+      updatedAt: serverTimestamp(),
+    };
+
+    // 2. Jika dokumen BELUM ada (data baru), tambahkan createdAt
+    if (!userSnap.exists()) {
+      (finalData as any).createdAt = serverTimestamp();
+    }
+
+    await setDoc(userRef, finalData, { merge: true });
+    
   } catch (error) {
     console.error("Error saving user:", error);
     throw error;
