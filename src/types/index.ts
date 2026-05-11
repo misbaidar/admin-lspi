@@ -26,3 +26,36 @@ export interface UserProfile {
   photoURL?: string;
   createdAt: Timestamp; // Timestamp
 }
+
+// Struktur Organisasi Types
+export interface OrganisasiMember {
+  id: string;
+  nama: string;
+  email?: string;
+  phone?: string;
+  foto?: string;
+  bio?: string;
+  mulai_tanggal?: Timestamp;
+  selesai_tanggal?: Timestamp;
+}
+
+export interface Posisi {
+  id: string;
+  nama_posisi: string;
+  order: number;
+  anggota: OrganisasiMember[];
+}
+
+export interface Sektor {
+  id: string;
+  nama_sektor: "Rijal" | "Nisa";
+  posisi: Posisi[];
+}
+
+export interface OrganizationStructure {
+  id?: string;
+  periode: string;
+  sektors: Sektor[];
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+}

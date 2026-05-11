@@ -10,6 +10,8 @@ import Settings from "./pages/Settings";
 import AdminRoute from "./components/auth/AdminRoute";
 import { AlertProvider } from "./context/AlertContext";
 import ArticleForm from "./pages/articles/ArticleForm";
+import StrukturOrganisasiList from "./pages/organization/StrukturOrganisasiList";
+import StrukturOrganisasiForm from "./pages/organization/StrukturOrganisasiForm";
 // Komponen Pembungkus Protected
 const ProtectedRoute = ({ children }: { children: React.JSX.Element }) => {
   const { user, loading } = useAuth();
@@ -48,6 +50,9 @@ function App() {
               <Route path="articles/edit/:id" element={<ArticleForm />} />
               <Route element={<AdminRoute />}>
                 <Route path="users" element={<UserList />} />
+                <Route path="organization" element={<StrukturOrganisasiList />} />
+                <Route path="organization/new" element={<StrukturOrganisasiForm />} />
+                <Route path="organization/edit/:id" element={<StrukturOrganisasiForm />} />
               </Route>
               <Route path="settings" element={<Settings />} />
             </Route>

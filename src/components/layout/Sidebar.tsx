@@ -1,6 +1,6 @@
 // src/components/layout/Sidebar.tsx
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, FileText, Settings, ExternalLink, Users } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, ExternalLink, Users, Building2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import LSPILogo from "../LSPILogo";
 import { useAuth } from "../../context/AuthContext";
@@ -11,7 +11,10 @@ const Sidebar = () => {
   const navLinks = [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
     { name: "Artikel", path: "/articles", icon: FileText },
-    ...(isAdmin ? [{ name: "Pengguna", path: "/users", icon: Users }] : []),
+    ...(isAdmin ? [
+      { name: "Pengguna", path: "/users", icon: Users },
+      { name: "Struktur Organisasi", path: "/organization", icon: Building2 }
+    ] : []),
     { name: "Pengaturan", path: "/settings", icon: Settings },
   ];
 
